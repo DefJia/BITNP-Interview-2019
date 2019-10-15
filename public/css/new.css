@@ -1,0 +1,38 @@
+body{
+    background-color: #D4EEC9;
+    text-align: center;
+    margin: auto;
+}
+h1, h2, h3, h4, h5, h6{
+    text-align: center;
+}
+p{
+    text-align: left;
+}
+footer{
+    left: 0;
+    bottom: 0;
+    height: 10vh;
+    width: 100%;
+}
+.img{
+    height: 90%;
+    width: 90%;
+    margin-bottom: 5vh;
+}
+a{
+    color:white;
+}
+hr{
+    width: 61.8%;
+    color:#ccc;
+}
+.hidden{
+    visibility: hidden;
+}
+td{
+    vertical-align: middle;
+}
+b{
+    color: red;
+}
