@@ -1,5 +1,5 @@
 body{
-    background-color: #D4EEC9;
+    background-color: #F6F5F0;
     text-align: center;
     margin: auto;
 }
@@ -30,8 +30,9 @@ hr{
 .hidden{
     visibility: hidden;
 }
-td{
+td, th{
     vertical-align: middle;
+    text-align: center;
 }
 b{
     color: red;

@@ -13,21 +13,15 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name') }}</title>
 
     <!-- Scripts -->
-    <script src="{{ asset('js/app.js') }}" defer></script>
-
-    <!-- Fonts -->
-    <!--
-    <link rel="dns-prefetch" href="//fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
-    -->
+    <script src="{{ ENV('APP_URL') }}/js/app.js" defer></script>
 
     <!-- Styles -->
-    <link href="{{ asset('css/font.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/new.css') }}" rel="stylesheet">
+    <link href="{{ ENV('APP_URL') }}/css/font.css" rel="stylesheet">
+    <link href="{{ ENV('APP_URL') }}/css/app.css" rel="stylesheet">
+    <link href="{{ ENV('APP_URL') }}/css/new.css" rel="stylesheet">
 </head>
 <body>
 
@@ -37,6 +31,25 @@
         <h3 style="margin: 5vh 0">
             @yield('title')
         </h3>
+
+        <div class="container">
+            <div class="card bg-light text-dark">
+                <div class="card-body">
+                    <?php
+                        $status_code = array('没来', '候场', '准备出发', '面试中', '结束');
+                        $status_color = array('secondary', 'primary', 'danger', 'warning', 'success');
+                        $text = array('候场人员：签到&选面试教室', '面试官：准备面试', '候场人员：安排出发', '面试官：写评论', '');
+                        $html = '';
+                        for($i = 0; $i < 5; $i++){
+                            $button_text = sprintf('<button type="button" class="btn btn-%s">%s</button>--%s-->', $status_color[$i], $status_code[$i], $text[$i]);
+                            $html .= $button_text;
+                        }
+                        $html = substr($html, 0, -5);
+                        echo $html
+                    ?>
+                </div>
+            </div>
+        </div>
 
         <main class="py-4">
             @yield('content')
@@ -50,7 +63,7 @@
         <a href="http://www.bit.edu.cn/" style="color: black"><u>北京理工大学</u></a>
         <a href="https://www.bitnp.net/" style="color: black"><u>网络开拓者协会</u></a>
         <br/>
-        <script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? "https://" : "http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1277809266'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s23.cnzz.com/z_stat.php%3Fid%3D1277809266%26online%3D2' type='text/javascript'%3E%3C/script%3E"));</script>
+        <script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? "https://" : "http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1278117619'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "v1.cnzz.com/z_stat.php%3Fid%3D1278117619%26online%3D2' type='text/javascript'%3E%3C/script%3E"));</script>    
     </footer>
 
 </body>
