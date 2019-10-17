@@ -46,7 +46,7 @@ class DBController extends Controller {
             }else{
                 if ($date_id == 0 && $room_id == 0){
                     // 全名单
-                    $records = DB::table('record')->select('date', 'room', 'time', 'name', 'status', 'id')->orderBy('id', 'asc')->get();
+                    $records = DB::table('record')->select('date', 'room', 'time', 'name', 'status', 'id')->orderBy('date', 'asc')->get();
                     $title = '所有';
                 } elseif($room_id == 0){
                     // 选日期未选教室
@@ -122,8 +122,8 @@ class DBController extends Controller {
     public function handle_action($aid, $uid){
         $rooms = array('2B-503', '2B-504');
 
-        $admin = array('Defjia');
-        $interviewer = array(['Room1'], ['Room2']);
+        $admin = array('Defjia', '张正', 'testAdmin', '冯开宇', 'Thd');
+        $interviewer = array(['Room1', 'PanYu', 'homer'], ['Room2', '谷旭凯', '宋尚儒', '刘宇']);
         $waiter = array('Waiter');
         $name = $this->get_current_user();
 
@@ -142,8 +142,10 @@ class DBController extends Controller {
                 $message = '签到失败！无操作权限！';
             }
             return redirect(ENV('APP_URL').'/list/1/0')->with('message', $message);
+            // return view('skip'))->with('message', $message);
         } elseif($aid == 2){
             // 准备面试
+            $room_index = 0;
             if(in_array($name, $admin) || in_array($name, $interviewer[0]) || in_array($name, $interviewer[1])){
                 // 权限符合
                 $tmp = DB::table('record')->select('status', 'room')->where('id', $uid)->get()[0];
@@ -160,7 +162,8 @@ class DBController extends Controller {
             } else{
                 $message = '准备面试失败！无操作权限！';
             }
-            return redirect(ENV('APP_URL').'/list/1/10')->with('message', $message);
+            $room_index++;
+            return redirect(ENV('APP_URL').'/list/1/'.$room_index)->with('message', $message);
         } elseif($aid == 3){
             // 前往面试
             if(in_array($name, $admin) || in_array($name, $waiter)){

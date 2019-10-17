@@ -29,8 +29,10 @@
                         <span class="caret"></span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                        <!--
                         <a class="dropdown-item" href="{{ env('SITE') }}/list/0/0">全名单
                         </a>
+                        -->
                         <a class="dropdown-item" href="{{ env('SITE') }}/list/1/0">10月17日
                         </a>
                         <a class="dropdown-item" href="{{ env('SITE') }}/list/2/0">10月18日
@@ -57,7 +59,7 @@
                     <a class="nav-link" href="{{ env('SITE') }}/paris">{{ __('巴黎和会') }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="https://github.com/DefJia/Interview-2017/blob/master/HowToUse.md">{{ __('使用指南') }}</a>
+                    <a class="nav-link" href="https://github.com/DefJia/BITNP-Interview-2019/blob/master/README.md">{{ __('使用指南') }}</a>
                 </li>
                 
                 <!-- Authentication Links -->

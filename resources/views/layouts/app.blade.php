@@ -1,6 +1,9 @@
 @if(Session::has('message'))
     <script type="text/javascript">
         alert('{{Session::get('message')}}');
+        //window.history.back(-1); 
+        //location.reload();
+        self.location=document.referrer;
     </script>
 @endif
 
@@ -35,6 +38,7 @@
         <div class="container">
             <div class="card bg-light text-dark">
                 <div class="card-body">
+                    <h6 style='color: red'>新手用户请查看导航栏中的使用指南！</h6>
                     <?php
                         $status_code = array('没来', '候场', '准备出发', '面试中', '结束');
                         $status_color = array('secondary', 'primary', 'danger', 'warning', 'success');
