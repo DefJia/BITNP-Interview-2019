@@ -38,8 +38,9 @@
         <div class="container">
             <div class="card bg-light text-dark">
                 <div class="card-body">
-                    <h6 style='color: red'>新手用户请查看导航栏中的使用指南！</h6>
+                    <h6 style='color: red'>新手用户请查看导航栏中的录取系统使用指南！</h6>
                     <?php
+                    /*
                         $status_code = array('没来', '候场', '准备出发', '面试中', '结束');
                         $status_color = array('secondary', 'primary', 'danger', 'warning', 'success');
                         $text = array('候场人员：签到&选面试教室', '面试官：准备面试', '候场人员：安排出发', '面试官：写评论', '');
@@ -50,6 +51,7 @@
                         }
                         $html = substr($html, 0, -5);
                         echo $html
+                    */
                     ?>
                 </div>
             </div>

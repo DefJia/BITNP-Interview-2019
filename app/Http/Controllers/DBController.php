@@ -20,29 +20,47 @@ class DBController extends Controller {
 
     public function show_list($date_id, $room_id){
         $dates = array('10月17日', '10月18日', '10月19日');
-        $rooms = array('2B-503', '2B-504');
+        $rooms = array('2A-202', '2A-203');
+        $departments = array('技术类', '电脑诊所', '数字媒体部', '组织部');
 
-        $status_code = array('没来', '候场', '准备出发', '面试中', '结束');
-        $status_color = array('secondary', 'primary', 'danger', 'warning', 'success');
+        // $status_code = array('没来', '候场', '准备出发', '面试中', '结束');
+        // $status_color = array('secondary', 'primary', 'danger', 'warning', 'success');
+        $status_code = array('没来', '候场', '准备出发', '面试中', '等待第一志愿录取', '等待第二志愿录取', '等待第三志愿录取', '等待捡漏/淘汰', '技术类录取', '电脑诊所录取', '数字媒体部录取', '组织部录取');
+        $status_color = array('secondary', 'primary', 'danger', 'warning', 'primary', 'warning', 'dark', 'danger', 'success', 'success', 'success');
 
-        $button_text = array('签到2B-503', '签到2B-504', '准备面试', '安排出发', '信息');
+        $button_text = array('签到2A-202', '签到2A-203', '准备面试', '安排出发', '信息');
         $button_color = array('secondary', 'secondary', 'primary', 'danger', 'info');
         
         $room_id = (int)$room_id;
         $date_id = (int)$date_id;
-        if($room_id == 10) $flag = 1; else $flag = 0;
-        // 是否为候场教室
+        $flag = 0;
+        if($room_id >= 5 && $room_id <= 14) $flag = 1; 
+        elseif(!(0 <= $room_id && $room_id <= sizeof($rooms)))
+            $room_id = 0;
         if(!(0 <= $date_id && $date_id <= sizeof($dates)))
             $date_id = 0;
-        if(!(0 <= $room_id && $room_id <= sizeof($rooms)))
-            $room_id = 0;
         // 0为全部
         $html = '';
         $title = '';
         if($this->get_current_user()){
             if ($flag == 1){
-                $records = DB::table('record')->select('date', 'room', 'time', 'name', 'status', 'id')->where([['status', '>=', 1], ['status', '<=', 2]])->orderBy('time', 'asc')->get();
-                $title = '候场教室';
+                $titles = array('技术类录取队列', '电脑诊所录取队列', '数字媒体部录取队列', '录取队列', '捡漏列表', '候场教室', '技术类录取名单', '电脑诊所录取名单', '数字媒体部录取名单', '组织部录取名单');
+                $title = $titles[$room_id-5];
+                if($room_id == 10){
+                    // 候场
+                    $records = DB::table('record')->select('date', 'room', 'time', 'name', 'status', 'id')->where([['status', '>=', 1], ['status', '<=', 3]])->orderBy('status', 'desc')->get();
+                } elseif($room_id == 9){
+                    // 捡漏, 录取
+                    $records = DB::table('record')->select('date', 'room', 'time', 'name', 'status', 'id')->where('status', 7)->get();
+                }elseif($room_id < 9){
+                    // 各部门待处理, 录取, 不录取
+                    $records1 = DB::table('record')->join('info', 'record.id', '=', 'info.id')->select('record.date', 'record.room', 'record.time', 'record.name', 'record.status', 'record.id')->where([['record.status', 4], ['info.first', $departments[$room_id-5]]])->get();
+                    $records2 = DB::table('record')->join('info', 'record.id', '=', 'info.id')->select('record.date', 'record.room', 'record.time', 'record.name', 'record.status', 'record.id')->where([['record.status', 5], ['info.second', $departments[$room_id-5]]])->get();
+                    $records3 = DB::table('record')->join('info', 'record.id', '=', 'info.id')->select('record.date', 'record.room', 'record.time', 'record.name', 'record.status', 'record.id')->where([['record.status', 6], ['info.third', $departments[$room_id-5]]])->get();
+                } elseif($room_id > 10){
+                    // 各部门已录取, 删除
+                    $records = DB::table('record')->select('date', 'room', 'time', 'name', 'status', 'id')->where('status', $room_id-3)->orderBy('status', 'desc')->get();
+                }
             }else{
                 if ($date_id == 0 && $room_id == 0){
                     // 全名单
@@ -62,28 +80,197 @@ class DBController extends Controller {
                 }
             }
             // 查询数据库
-            foreach($records as $record){
-                $html .= '<tr>';
-                $cnt = 0;
-                foreach ($record as $elem) {
-                    $cnt++;
-                    if ($cnt < 5){
-                        $html .= sprintf('<td>%s</td>', $elem);
-                    } elseif($cnt == 5){
-                        $html .= sprintf('<td><button type="button" class="btn btn-%s">%s</button></td>', $status_color[$elem], $status_code[$elem]);
-                    } elseif($cnt == 6){
-                        for($i = 0; $i < 5; $i++){
-                            $button = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), $i, $elem, $button_color[$i], $button_text[$i]);
-                            if ($i == 0) $button = substr($button, 0, -5);
-                            elseif ($i == 1) $button = substr($button, 4);
-                            $html .= $button;
+            if ($room_id < 5 || $room_id > 8){
+                foreach($records as $record){
+                    $html .= '<tr>';
+                    $cnt = 0;
+                    foreach ($record as $elem) {
+                        $cnt++;
+                        if ($cnt < 5){
+                            $html .= sprintf('<td>%s</td>', $elem);
+                        } elseif($cnt == 5){
+                            // if($elem > 4) $elem = 4;
+                            $html .= sprintf('<td><button type="button" class="btn btn-%s">%s</button></td>', $status_color[$elem], $status_code[$elem]);
+                        } elseif($cnt == 6){
+                            if($flag == 0 || $room_id == 10){
+                                // 面试
+                                for($i = 0; $i < 5; $i++){
+                                    $button = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), $i, $elem, $button_color[$i], $button_text[$i]);
+                                    if ($i == 0) $button = substr($button, 0, -5);
+                                    elseif ($i == 1) $button = substr($button, 4);
+                                    $html .= $button;
+                                }
+                            } else{
+                                // 录取
+                                // 5-8 录取 不录取
+                                // 9 录取
+                                // 11-14 删除
+                                if($room_id >= 5 && $room_id <= 8){
+                                    $button1 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 5, $elem, 'success', '录取');
+                                    $button2 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 6, $elem, 'danger', '不录取');
+                                } elseif($room_id == 9){
+                                    $button1 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 5, $elem, 'success', '录取');
+                                    $button2 = '';
+                                } else{
+                                    $button1 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 7, $elem, 'danger', '删除');
+                                    $button2 = '';
+                                }
+                                $button_info = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 4, $elem, $button_color[4], $button_text[4]);
+                                $html .= $button_info.$button1.$button2;
+                            }
                         }
                     }
+                $html .= '</tr>';
                 }
-            $html .= '</tr>';
+            } else{
+                foreach($records1 as $record){
+                    $html .= '<tr>';
+                    $cnt = 0;
+                    foreach ($record as $elem) {
+                        $cnt++;
+                        if ($cnt < 5){
+                            $html .= sprintf('<td>%s</td>', $elem);
+                        } elseif($cnt == 5){
+                            // if($elem > 4) $elem = 4;
+                            $html .= sprintf('<td><button type="button" class="btn btn-%s">%s</button></td>', $status_color[$elem], $status_code[$elem]);
+                        } elseif($cnt == 6){
+                            if($flag == 0 || $room_id == 10){
+                                // 面试
+                                for($i = 0; $i < 5; $i++){
+                                    $button = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), $i, $elem, $button_color[$i], $button_text[$i]);
+                                    if ($i == 0) $button = substr($button, 0, -5);
+                                    elseif ($i == 1) $button = substr($button, 4);
+                                    $html .= $button;
+                                }
+                            } else{
+                                // 录取
+                                // 5-8 录取 不录取
+                                // 9 录取
+                                // 11-14 删除
+                                if($room_id >= 5 && $room_id <= 8){
+                                    $button1 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 5, $elem, 'success', '录取');
+                                    $button2 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 6, $elem, 'danger', '不录取');
+                                } elseif($room_id == 9){
+                                    $button1 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 5, $elem, 'success', '录取');
+                                    $button2 = '';
+                                } else{
+                                    $button1 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 7, $elem, 'danger', '删除');
+                                    $button2 = '';
+                                }
+                                $button_info = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 4, $elem, $button_color[4], $button_text[4]);
+                                $html .= $button_info.$button1.$button2;
+                            }
+                        }
+                    }
+                $html .= '</tr>';
+                }
+                foreach($records2 as $record){
+                    $html .= '<tr>';
+                    $cnt = 0;
+                    foreach ($record as $elem) {
+                        $cnt++;
+                        if ($cnt < 5){
+                            $html .= sprintf('<td>%s</td>', $elem);
+                        } elseif($cnt == 5){
+                            if($elem > 4) $elem = 4;
+                            $html .= sprintf('<td><button type="button" class="btn btn-%s">%s</button></td>', $status_color[$elem], $status_code[$elem]);
+                        } elseif($cnt == 6){
+                            if($flag == 0 || $room_id == 10){
+                                // 面试
+                                for($i = 0; $i < 5; $i++){
+                                    $button = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), $i, $elem, $button_color[$i], $button_text[$i]);
+                                    if ($i == 0) $button = substr($button, 0, -5);
+                                    elseif ($i == 1) $button = substr($button, 4);
+                                    $html .= $button;
+                                }
+                            } else{
+                                // 录取
+                                // 5-8 录取 不录取
+                                // 9 录取
+                                // 11-14 删除
+                                if($room_id >= 5 && $room_id <= 8){
+                                    $button1 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 5, $elem, 'success', '录取');
+                                    $button2 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 6, $elem, 'danger', '不录取');
+                                } elseif($room_id == 9){
+                                    $button1 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 5, $elem, 'success', '录取');
+                                    $button2 = '';
+                                } else{
+                                    $button1 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 7, $elem, 'danger', '删除');
+                                    $button2 = '';
+                                }
+                                $button_info = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 4, $elem, $button_color[4], $button_text[4]);
+                                $html .= $button_info.$button1.$button2;
+                            }
+                        }
+                    }
+                $html .= '</tr>';
+                }
+                foreach($records3 as $record){
+                    $html .= '<tr>';
+                    $cnt = 0;
+                    foreach ($record as $elem) {
+                        $cnt++;
+                        if ($cnt < 5){
+                            $html .= sprintf('<td>%s</td>', $elem);
+                        } elseif($cnt == 5){
+                            if($elem > 4) $elem = 4;
+                            $html .= sprintf('<td><button type="button" class="btn btn-%s">%s</button></td>', $status_color[$elem], $status_code[$elem]);
+                        } elseif($cnt == 6){
+                            if($flag == 0 || $room_id == 10){
+                                // 面试
+                                for($i = 0; $i < 5; $i++){
+                                    $button = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), $i, $elem, $button_color[$i], $button_text[$i]);
+                                    if ($i == 0) $button = substr($button, 0, -5);
+                                    elseif ($i == 1) $button = substr($button, 4);
+                                    $html .= $button;
+                                }
+                            } else{
+                                // 录取
+                                // 5-8 录取 不录取
+                                // 9 录取
+                                // 11-14 删除
+                                if($room_id >= 5 && $room_id <= 8){
+                                    $button1 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 5, $elem, 'success', '录取');
+                                    $button2 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 6, $elem, 'danger', '不录取');
+                                } elseif($room_id == 9){
+                                    $button1 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 5, $elem, 'success', '录取');
+                                    $button2 = '';
+                                } else{
+                                    $button1 = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 7, $elem, 'danger', '删除');
+                                    $button2 = '';
+                                }
+                                $button_info = sprintf('<td><a href="%s/action/%s/%d"><button type="button" class="btn btn-%s">%s</button><a></td>', ENV('APP_URL'), 4, $elem, $button_color[4], $button_text[4]);
+                                $html .= $button_info.$button1.$button2;
+                            }
+                        }
+                    }
+                $html .= '</tr>';
+                }
             }
         } 
-        $data = array($title, $html);
+        if($flag == 0 || $room_id == 10){        
+            $header = '
+            <th>日期</th>
+            <th>教室</th> 
+            <th>时间</th> 
+            <th>姓名</th>
+            <th>状态</th>
+            <th>候场教室操作</th>
+            <th>面试教室操作</th>
+            <th>候场教室操作</th>
+            <th>信息</th>';
+        } else{
+            $header = '
+            <th>日期</th>
+            <th>教室</th> 
+            <th>时间</th> 
+            <th>姓名</th>
+            <th>状态</th>
+            <th>信息</th>
+            <th>操作1</th>
+            <th>操作2</th>';
+        }
+        $data = array($title, $header, $html);
         return view('list')->with('data', $data);
     }
 
@@ -120,11 +307,12 @@ class DBController extends Controller {
     }
 
     public function handle_action($aid, $uid){
-        $rooms = array('2B-503', '2B-504');
+        $rooms = array('2A-202', '2A-203');
 
-        $admin = array('Defjia', '张正', 'testAdmin', '冯开宇', 'Thd');
-        $interviewer = array(['Room1', 'PanYu', 'homer'], ['Room2', '谷旭凯', '宋尚儒', '刘宇']);
+        $admin = array('Defjia', 'Thd');
+        $interviewer = array(['PanYu', '宋尚儒', '刘宇', 'Rinka'], []);
         $waiter = array('Waiter');
+        $leaders = array('杨璐铭' => 0, 'PanYu' => 1, '邓卓辰' => 2, '齐紫妃' => 3, 'Defjia' => 0);
         $name = $this->get_current_user();
 
         if($aid == 0 || $aid == 1){
@@ -141,7 +329,7 @@ class DBController extends Controller {
             } else{
                 $message = '签到失败！无操作权限！';
             }
-            return redirect(ENV('APP_URL').'/list/1/0')->with('message', $message);
+            return redirect(ENV('APP_URL').'/list/3/0')->with('message', $message);
             // return view('skip'))->with('message', $message);
         } elseif($aid == 2){
             // 准备面试
@@ -182,7 +370,42 @@ class DBController extends Controller {
         } elseif($aid == 4){
             // 个人信息
             return redirect(ENV('APP_URL').'/info/'.$uid);
+        } elseif($aid == 5){
+            // 录取
+            if(in_array($name, $leaders)){
+                $dpt_no = $leaders[$name];
+                DB::table('record')->where('id', $uid)->update(['status' => $dpt_no + 8]);
+                $message = '录取成功！';
+            } else{
+                $message = '无权限操作！';
+            }
+        } elseif($aid == 6){
+            // 不录取
+            if(in_array($name, $leaders)){
+                $status = DB::table('record')->select('status')->where('id', $uid)->get()[0];
+                $status++;
+                DB::table('record')->where('id', $uid)->update(['status' => $status]);
+                While($status >= 5 || $status <= 6){
+                    // 可能为空
+                    $tmp = ['second', 'third'];
+                    $tmp2 = DB::table('record')->join('info', 'record.id', '=', 'info.id')->select('info.'.$tmp[$status-4])->where('record.id', $uid)->get()[0];
+                    if($tmp2 == '') $status++;
+                    else break;
+                }
+                $message = '退档成功！将进入下一志愿队列';
+            } else{
+                $message = '无权限操作！';
+            }
+        } elseif($aid == 7){
+            // 删除
+            if(in_array($name, $leaders) || in_array($name, $admin)){
+                DB::table('record')->where('id', $uid)->update(['status' => 7]);
+                $message = '删除成功！此人已进入捡漏队列！';
+            } else{
+                $message = '无权限操作！';
+            }
         }
+        return redirect(ENV('APP_URL').'/list/1/0')->with('message', $message);
     }
 
     public function insert_data(){
@@ -194,9 +417,10 @@ class DBController extends Controller {
             DB::table('record')->where('id', $eeid)->update(['status' => 4]);
         return redirect('/info/'.$eeid)->with('message', '面试评论提交成功！');
     }
-
+    /*
     public function paris(){
         return redirect('/list/0/0')->with('message', '会场正在布置中！');
     }
+    */
 
 }

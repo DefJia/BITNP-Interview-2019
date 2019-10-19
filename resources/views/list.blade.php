@@ -8,20 +8,12 @@
 <div class="container">
 <table class="table table-hover"> 
     <thead> 
-        <tr> 
-            <th>日期</th>
-            <th>教室</th> 
-            <th>时间</th> 
-            <th>姓名</th>
-            <th>状态</th>
-            <th>候场教室操作</th>
-            <th>面试教室操作</th>
-            <th>候场教室操作</th>
-            <th>信息</th>
+        <tr>  
+            {!! $data[1] !!}
         </tr> 
     </thead> 
     <tbody> 
-        {!! $data[1] !!}
+        {!! $data[2] !!}
     </tbody> 
 </table>
 </div>

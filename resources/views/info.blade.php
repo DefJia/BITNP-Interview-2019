@@ -12,9 +12,9 @@
             <div class="container">
                 <table class="table table-sm table-hover">
                     <thead>
-                        <th style='text-align:left'>填写时间</th>
-                        <th style='text-align:left'>面试官</th>
+                        <th style='text-align:left;white-space:nowrap'>填写时间</th>
                         <th style='text-align:left'>评论</th>
+                        <th style='text-align:left;white-space:nowrap'>面试官</th>
                         <!--
                             <th>打分习惯-平均分</th>
                             <th>方差</th>
